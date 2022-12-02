@@ -10,14 +10,14 @@
 using namespace std;
 
 // Parametros globales
-unsigned long numElements = 2668026; // numero de elementos totales
-double epsilon = 0.1; // tamaño del arreglo mas grande
-double numC=1; // factor por el que va disminuyendo el tamaño de cada arreglo a medida pasan los niveles.
+unsigned long numElements = pow(2,5); // numero de elementos totales
+double epsilon = 1; // tamaño del arreglo mas grande
+double numC=0.5; // factor por el que va disminuyendo el tamaño de cada arreglo a medida pasan los niveles.
 bool manualLectura = false;
 
 void lecturaManual(KLL &kll){
     vector<long> elementos;
-    for(int i=1;i<=numElements;i++){
+    for(int i=0;i<numElements;i++){
         // elementos.push_back(i);
         elementos.push_back(rand()%(10*numElements));
     }
@@ -25,17 +25,11 @@ void lecturaManual(KLL &kll){
     auto rng = std::default_random_engine {};
     std::shuffle(std::begin(elementos), std::end(elementos), rng);
 
-    //int numColumnas = 0;
-    //int numMaxColumnas = 15;
+    cout << "elementos a insertar listos" << endl;
 
     for(int i=0;i<numElements;i++){
-        //numColumnas++;
-        //cout << elementos.at(i) << " ";
-        //if(numColumnas==numMaxColumnas){
-        //    numColumnas = 0;
-        //    cout << endl;
-        //} 
-        kll.update(elementos.at(i));
+        kll.add(elementos.at(i));
+        //cout << "termino" << endl;
     }
     cout << endl;
 
@@ -77,7 +71,7 @@ void lecturaStream(KLL &kll, string nombreFichero){
         fichero >> elemento;
         if(fichero.eof()) break;
         //cerr << elemento << endl;
-        kll.update(elemento);
+        kll.add(elemento);
     }
 }
 
@@ -86,8 +80,12 @@ int main(int argc, char*argv[]){
     //kll.print();
 
     // lectura manual o por stream
-    if(manualLectura) lecturaManual(kll);
-    else lecturaStream(kll,argv[1]);
+    if(argc==1) lecturaManual(kll);
+    else if(argc==2) lecturaStream(kll,argv[1]);
+    else{
+        cout << "Numero de parametros incorrectos" << endl;
+        return 0;
+    }
 
     // print de quantiles
     cout << "quantile 0.25: " << kll.quantile(0.25) << endl;

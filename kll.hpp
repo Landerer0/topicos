@@ -7,24 +7,32 @@ class KLL{
     public:
         KLL(unsigned long,double,double);
         ~KLL();
-        void update(long &element); // agregar element al sketch
-        // Operaciones asociadas al problema
+        
+        // Operaciones asociadas al problema y funcionalidad general
+        void add(long &element); // agregar element al sketch
         unsigned long rank(long element); // indica el rank del elemento proporcionado
         long select(long rank); // retorna el elemento cuyo rank es el indicado
         long quantile(double q); // retorna elemento encontrado en el quantil q
 
+        // Operaciones para realizar merge
+        long height();
+        pair<vector<long>, long> sketchAtLevel(long nivel);
+        void update(KLL kll2);
+
+        // Operaciones auxiliares
         void print(); // imprime arreglos
 
     private:
-        vector<pair<vector<long>, long> > sketch; // arreglo de arreglos con tamaño decreciente
-                                                  // long es para mantener el num de elementos 
-                                                  // ocupados en el arreglo de dicho nivel
         unsigned int numArreglos;
-
+        vector<pair<vector<long>, long> > sketch; // arreglo de arreglos con tamaño decreciente
+            // sketch[i].first almacena los vectores donde se almacenan los elementos de nivel i
+            // sketch[i].second mantiene el num de elementos ocupados en dicho nivel i
+        vector<bool> sorted; // indica si el sketch[i] se encuentra ordenado
+        
         // Operaciones
         void insertElement(long nivel,long &element);
-        void insertCompactionElement(long nivel,long &element);
-        void compaction(long nivel);
+        void insertCompactionElement(long nivel,long &element,bool updating);
+        void compaction(long nivel,bool updating);
 
         // variables k y c son ctes. entregadas por el usuario, c esta en rango [0.1,1]
         unsigned long long k; // capacidad del arreglo de mayor tamaño
