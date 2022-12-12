@@ -17,10 +17,13 @@ class KLL{
         // Operaciones para realizar merge
         long height();
         pair<vector<long>, long> sketchAtLevel(long nivel);
+        bool sortedAtLevel(long nivel);
         void update(KLL kll2);
+        void setSeconds(vector<long> seconds);
 
         // Operaciones auxiliares
         void print(); // imprime arreglos
+        KLL kllMerge(KLL &kll2);
 
     private:
         unsigned int numArreglos;
@@ -39,8 +42,11 @@ class KLL{
         double c; // factor por el que cada arreglo va disminuyendo al aumentar la altura del arreglo
         unsigned long long n; 
         unsigned long long numElementosRevisados; 
+        double epsilon;
 
         bool debug = false;
 
         void compaction(int level);
+        KLL copy();
+        KLL(unsigned long,double,double, unsigned long long, KLL*);
 };

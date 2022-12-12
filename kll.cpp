@@ -1,21 +1,24 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <stdio.h>
+#include <string.h>
 
 #include "kll.hpp"
 
 using namespace std;
-KLL::KLL(unsigned long numElements, double epsilon, double numC){
+KLL::KLL(unsigned long numElements, double epsilonParam, double numC){
     // usar propiedad de log: log_b(a) = log(a)/log(b) 
     n = numElements;
     c = numC;
+    epsilon = epsilonParam;
     k = ceil(1.0/epsilon* ceil(log2(epsilon*n))) +1;
     if(k%2==1) k+=1; // k sera par
 
-    cout << "Num Elementos: " << numElements << endl;
-    cout << "K: " << k << endl;
-    cout << "c: " << c << endl;
-    cout << endl;
+    cerr << "Num Elementos: " << numElements << endl;
+    cerr << "K: " << k << endl;
+    cerr << "c: " << c << endl;
+    cerr << endl;
     numArreglos = ceil(log2(n/k*2));
     numElementosRevisados = 0;
     unsigned long long espacioOcupado = 0;
@@ -35,7 +38,7 @@ KLL::KLL(unsigned long numElements, double epsilon, double numC){
         sorted.push_back(false); // indicamos que no se encuentra sorteado el arreglo
     }
 
-    cout << "Cant elementos en Arreglo: " << espacioOcupado << " Espacio ocupado: " << espacioOcupado*sizeof(long) << " bytes" <<  endl;
+    cout << "Cant elementos en Sketch: " << espacioOcupado << " Espacio ocupado: " << espacioOcupado*sizeof(long) << " bytes" <<  endl;
     print();
 }
 
@@ -52,17 +55,34 @@ void KLL::insertElement(long nivel,long &element){
 }
 
 void KLL::insertCompactionElement(long nivel,long &element, bool updating){
+    // AVANCE2
+    // if(updating) cout << "inicio insert " << element << endl;
+
     long posAInsertar = sketch.at(nivel).second;
     if(posAInsertar==sketch.at(nivel).first.size()){
+        if(nivel==numArreglos && updating){
+            //Agregar nuevo compactor de tam k
+            long numElementosInsert = 2;
+            vector<long> toInsert(numElementosInsert,-2);
+            sketch.push_back(make_pair(toInsert,0));
+            numArreglos++;
+        }
         compaction(nivel,updating);
         posAInsertar = sketch.at(nivel).second;
     }
+    
     sketch.at(nivel).first.at(posAInsertar) = element;
     sketch.at(nivel).second++;
+
+    // AVANCE2
+    // if(updating){
+    //     cout << endl << "Insert element: " << element << endl;
+    //     print();
+    // }
 }
 
 void KLL::compaction(long nivel, bool updating){
-    //cout << "Compaction:" << endl;
+    //cout << "Compaction: " << nivel <<  endl;
     //print();
 
     long numElementosOcupados = sketch.at(nivel).second;
@@ -73,18 +93,17 @@ void KLL::compaction(long nivel, bool updating){
         if(debug) cerr << endl << "compaction " << nivel+1 << endl;
         if(rand()%2==0) elementosPares = 0; // se mantienen los elementos pares
         else elementosPares = 1; // se mantienen los elementos impares
-        
+
         // sort del arreglo
         sort(sketch.at(nivel).first.begin(), sketch.at(nivel).first.end());
         
         if(debug) print();
-
+        
+        sketch.at(nivel).second = 0;
         // insertar la mitad de elementos (los pares o impares) en el sgte. nivel
         for(int i=elementosPares;i<numElementosTotales;i+=2){
             insertCompactionElement(nivel+1,sketch.at(nivel).first.at(i),updating);
         }
-
-        sketch.at(nivel).second = 0; // se "vacia el arreglo"
 
         long nullElement = -1;
         for(int i=0;i<numElementosTotales;i++){
@@ -181,12 +200,24 @@ pair<vector<long>, long> KLL::sketchAtLevel(long nivel){
     return sketch.at(nivel);
 }
 
+bool KLL::sortedAtLevel(long nivel){
+    if(nivel<0||nivel>=numArreglos) return false;
+    return sorted.at(nivel);
+}
+
 void KLL::update(KLL kll2){
+    
+    //kll2.setSeconds(vector<long>());
     // para cada nivel
     for(int nivel=0; nivel<kll2.height();nivel++){
-        pair<vector<long>,long> kll2pair = sketchAtLevel(nivel);
+        pair<vector<long>,long> kll2pair = kll2.sketchAtLevel(nivel);
+        // cout << "nivel " << nivel << endl;
+        // setSeconds(vector<long>());
+        // cerr << "Elementos1 en nivel " << nivel << ": " << sketch.at(nivel).second << endl;
+        // cerr << "Elementos2 en nivel " << nivel << ": " << kll2pair.second << endl;
         // para cada elemento dentro del compactor
         for(int i=0; i < kll2pair.second;i++){
+            if(kll2pair.first.at(i)<0) continue;
             insertCompactionElement(nivel,kll2pair.first.at(i),true);
         }
     }
@@ -194,18 +225,60 @@ void KLL::update(KLL kll2){
     return;
 }
 
-KLL merge(KLL kll1, KLL kll2){ 
-    // dejaremos el resultado del merge en kll1
-    
-    // dejamos al kll con mayor numero de compactors como kll1
-    if(kll1.height() < kll2.height()){
-        KLL aux = kll1;
-        kll1 = kll2;
-        kll2 = aux;
+
+void KLL::setSeconds(vector<long> seconds){
+    for(int i=0;i<numArreglos;i++){
+        //sketch.at(i).second = seconds.at(i);
+        cerr << sketch.at(i).second << endl;
     }
-
-    // realizamos update
-    kll1.update(kll2);
-
-    return kll1;
+    
+    return;
 }
+
+KLL KLL::kllMerge(KLL &kll2){ 
+    // Creamos una copia del kll a devolver
+    if(height() < kll2.height()){
+        KLL kllCopy2 = kll2.copy();
+        kllCopy2.update(*this);
+        return kllCopy2;
+    } 
+    else{
+        KLL kllCopy1 = copy();
+        kllCopy1.update(kll2);
+        return kllCopy1;
+    } 
+
+    
+}
+
+
+
+KLL::KLL(unsigned long numElements, double epsilonParam, double numC, unsigned long long elementosRevisados, KLL* toCopy){
+// usar propiedad de log: log_b(a) = log(a)/log(b) 
+    n = numElements;
+    c = numC;
+    epsilon = epsilonParam;
+    numElementosRevisados = elementosRevisados;
+
+    k = ceil(1.0/epsilon* ceil(log2(epsilon*n))) +1;
+    if(k%2==1) k+=1; // k sera par
+
+    cerr << "Num Elementos: " << numElements << endl;
+    cerr << "K: " << k << endl;
+    cerr << "c: " << c << endl;
+    cerr << endl;
+    numArreglos = ceil(log2(n/k*2));
+
+    // copiar los valores del kll a copiar
+    for(int i=0;i<numArreglos;i++){
+        sketch.push_back(toCopy->sketchAtLevel(i));
+        sorted.push_back(toCopy->sortedAtLevel(i));
+    }
+}
+
+KLL KLL::copy(){
+    KLL copia(n,epsilon,c,numElementosRevisados,this);
+    return copia;
+}
+
+
