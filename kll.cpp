@@ -21,12 +21,19 @@ KLL::KLL(unsigned long numElements, double epsilonParam, double numC){
     cerr << endl;
     numArreglos = ceil(log2(n/k*2));
     numElementosRevisados = 0;
+    numArreglosOcupados = 0;
     unsigned long long espacioOcupado = 0;
+
+    vector<long> sizeTemp;
+    for(int i=0;i<numArreglos;i++){
+        unsigned long long cantElementos = max((int)(k*pow(c,i)),(int)2);
+        sizeTemp.push_back(max((int)(k*pow(c,i)),(int)2));
+    }
 
     // inicializar los vectores de tam k*c^lvl
     for(int i=0;i<numArreglos;i++){
         // el valor por defecto es -1, que indica "vacio"
-        unsigned long long cantElementos = max((int)(k*pow(c,i)),(int)2);
+        unsigned long long cantElementos = sizeTemp.at(numArreglos-1-i);
         espacioOcupado += cantElementos;
         cerr << "Cantidad Elementos arreglo " << i <<" :" << cantElementos<< endl;
         long valorElemento = -2;

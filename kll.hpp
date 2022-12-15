@@ -27,6 +27,7 @@ class KLL{
 
     private:
         unsigned int numArreglos;
+        unsigned int numArreglosOcupados;
         vector<pair<vector<long>, long> > sketch; // arreglo de arreglos con tamaño decreciente
             // sketch[i].first almacena los vectores donde se almacenan los elementos de nivel i
             // sketch[i].second mantiene el num de elementos ocupados en dicho nivel i

@@ -13,11 +13,9 @@ using namespace std;
 // Parametros globales
 unsigned long numElements = pow(2,5); // numero de elementos totales
 unsigned long numElements2 = pow(2,7); // numero de elementos del segundo archivo
-//unsigned long numElements = 2668026; // numero de elementos totales
-//unsigned long numElements2 = 20919376; // numero de elementos del segundo archivo
 
 double epsilon = 1; // tamaño del arreglo mas grande
-double numC=1; // factor por el que va disminuyendo el tamaño de cada arreglo a medida pasan los niveles.
+double numC=0.9; // factor por el que va disminuyendo el tamaño de cada arreglo a medida pasan los niveles.
 bool manualLectura = false;
 
 void quantiles(KLL &kll, int numQuantiles){
