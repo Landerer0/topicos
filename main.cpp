@@ -5,13 +5,15 @@
 #include <fstream>
 #include <string>
 #include <string.h>
+#include<stdlib.h>
+#include <time.h>
 
 #include "kll.hpp"
 
 using namespace std;
 
 // Parametros globales
-unsigned long numElements = pow(2,5); // numero de elementos totales
+unsigned long numElements = pow(2,22); // numero de elementos totales
 unsigned long numElements2 = pow(2,7); // numero de elementos del segundo archivo
 
 double epsilon = 1; // tamaño del arreglo mas grande
@@ -41,11 +43,12 @@ vector<long> crearVectorElements(long numElementosCreate){
 
 void lecturaManual(){
     vector<long> elementos = crearVectorElements(numElements);
-    vector<long> elementos2 = crearVectorElements(numElements2);
-    
+    // vector<long> elementos2 = crearVectorElements(numElements2);
+    sort(elementos.begin(),elementos.end()); // para comprobar entrada ordenada
+
     KLL kll(numElements, epsilon, numC);
-    KLL kll2(numElements2, epsilon, numC);
-    KLL kll3(numElements2, epsilon, numC);
+    // KLL kll2(numElements2, epsilon, numC);
+    // KLL kll3(numElements2, epsilon, numC);
 
     cout << "elementos a insertar listos" << endl;
 
@@ -58,39 +61,54 @@ void lecturaManual(){
     cout << "KLL1 Final:" << endl;
     kll.print();
 
-    for(int i=0;i<numElements2;i++){
-        kll2.add(elementos2.at(i));
-        kll3.add(elementos2.at(i));
-        //cout << "termino" << endl;
+    // for(int i=0;i<numElements2;i++){
+    //     kll2.add(elementos2.at(i));
+    //     kll3.add(elementos2.at(i));
+    //     //cout << "termino" << endl;
+    // }
+    // cout << endl;
+
+    // cout << "KLL2 Final:" << endl;
+    // kll2.print();
+
+    // cout << endl <<  "KLL Merge:" << endl;
+    // KLL merge = kll.kllMerge(kll2);
+    // merge.print();
+    // cout << endl;
+
+    int numQuery = 10;
+    vector<long> query;
+    for(int i=0;i<numQuery;i++){
+        query.push_back(elementos.at(rand()%elementos.size()));
     }
-    cout << endl;
+    sort(query.begin(),query.end());
+    //sort(elementos.begin(),elementos.end());
 
-    cout << "KLL2 Final:" << endl;
-    kll2.print();
+    cout << endl << "RESULTADOS:" << endl;
+    unsigned long long sumaErrorRank = 0;
+    // print de rank y select
+    for(int i=0;i<numQuery;i++){
+        long queryRank = kll.rank(query.at(i));
+        long rankCorrecto = long(lower_bound(elementos.begin(), elementos.end(), query.at(i)) - elementos.begin());
+        cout << "rank de " << query.at(i) << ": " << queryRank << endl;  
+        cout << "rank correcto de " << query.at(i) << ": " 
+             << rankCorrecto << endl;
+        cout << "error de rank: " << abs(queryRank-rankCorrecto) << endl;
+        sumaErrorRank+=abs(queryRank-rankCorrecto);
+        cout << "select de " << queryRank << ": " << kll.select(queryRank) << endl; 
+        cout << "select correcto de " << rankCorrecto << ": " 
+             << elementos.at(rankCorrecto) << endl;
+       
+        for(int j=0;j<10;j++){
+            cout << "- ";
+        }
+        cout << endl;
+    }
 
-    cout << endl <<  "KLL Merge:" << endl;
-    KLL merge = kll.kllMerge(kll2);
-    merge.print();
-    cout << endl;
-
-    // int numQuery = 10;
-    // vector<long> query;
-    // for(int i=0;i<numQuery;i++){
-    //     query.push_back(elementos.at(rand()%elementos.size()));
-    // }
-    // sort(query.begin(),query.end());
-
-    // cout << endl << "RESULTADOS:" << endl;
-    // // print de rank y select
-    // for(int i=0;i<numQuery;i++){
-    //     long queryRank = kll.rank(query.at(i));
-    //     cout << "rank de " << query.at(i) << ": " << queryRank << endl; 
-    //     cout << "select de " << queryRank << ": " << kll.select(queryRank) << endl; 
-    //     for(int j=0;j<10;j++){
-    //         cout << "- ";
-    //     }
-    //     cout << endl;
-    // }
+    cout << "Error de rank promedio: " << sumaErrorRank/numQuery << " con un total de " 
+         << elementos.size() << " elementos" << endl
+         << "proporcion de error respecto al tamaño de elementos: " 
+         << (double)sumaErrorRank*100.0/(double)numQuery/(double)elementos.size() << "%" << endl;
 
     cout << "fin lectura manual" << endl;
 }
@@ -155,6 +173,7 @@ void lecturaDeStream(int numStreams, char* argv[]){
 }
 
 int main(int argc, char*argv[]){
+    srand(time(NULL));
     // lectura manual o por stream
     if(argc==1) lecturaManual();
     else if(argc>=2) lecturaDeStream(argc-1, argv);
