@@ -5,8 +5,9 @@
 #include <fstream>
 #include <string>
 #include <string.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <time.h>
+#include <chrono>
 
 #include "kll.hpp"
 
@@ -86,11 +87,19 @@ void lecturaManual(){
 
     cout << endl << "RESULTADOS:" << endl;
     unsigned long long sumaErrorRank = 0;
+
+
     // print de rank y select
+    double duracionTotal = 0; //not sure about the type
     for(int i=0;i<numQuery;i++){
+        auto t_start = std::chrono::high_resolution_clock::now();
+
         long queryRank = kll.rank(query.at(i));
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_time_ms = std::chrono::duration<double, std::nano>(t_end-t_start).count();
+        duracionTotal += elapsed_time_ms;
         long rankCorrecto = long(lower_bound(elementos.begin(), elementos.end(), query.at(i)) - elementos.begin());
-        cout << "rank de " << query.at(i) << ": " << queryRank << endl;  
+        cout << "rank de " << query.at(i) << ": " << queryRank << "Tomado en un tiempo de " << endl;  
         cout << "rank correcto de " << query.at(i) << ": " 
              << rankCorrecto << endl;
         cout << "error de rank: " << abs(queryRank-rankCorrecto) << endl;
@@ -105,10 +114,12 @@ void lecturaManual(){
         cout << endl;
     }
 
+
     cout << "Error de rank promedio: " << sumaErrorRank/numQuery << " con un total de " 
          << elementos.size() << " elementos" << endl
          << "proporcion de error respecto al tamaño de elementos: " 
-         << (double)sumaErrorRank*100.0/(double)numQuery/(double)elementos.size() << "%" << endl;
+         << (double)sumaErrorRank*100.0/(double)numQuery/(double)elementos.size() << "%" << endl
+         << "Tiempo promedio de rank: " << duracionTotal/numQuery << " [ns]" << endl;
 
     cout << "fin lectura manual" << endl;
 }

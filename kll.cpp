@@ -126,7 +126,6 @@ void KLL::compaction(long nivel, bool updating){
     }
 }
 
-// discutir si conviene mantener el valor de k*c^i almacenado en memoria o si da "lo mismo" computarlo
 void KLL::add(long &element){
     numElementosRevisados++; // para metodo quantile
     insertElement(0,element);
@@ -140,10 +139,12 @@ unsigned long KLL::rank(long element){
 
     vector<long> actual;
 
-    // falta decidir de si realizar la operacion hasta el siguiente elemento mayor o no
     for(int nivel=0;nivel< numArreglos;nivel++){ // por cada arreglo
         actual = sketch.at(nivel).first;
-        if(!sorted.at(nivel)) sort(actual.begin(),actual.end());
+        if(!sorted.at(nivel)){
+            sort(actual.begin(),actual.end());
+            sorted.at(nivel) = true;
+        } 
         for(int i=0;i<actual.size();i++){ // por cada item dentro del arreglo
             if(actual.at(i) < 0) continue;
             if(element >= actual.at(i)){ // comparo el num elementos menores
@@ -183,7 +184,6 @@ long KLL::select(long rank){
 }
 
 long KLL::quantile(double q){
-    // REVISAR SI ES CEIL O FLOOR, POR EL MOMENTO ME HACE SENTIDO FLOOR
     return select(floor(q*numElementosRevisados));
 }
 
@@ -214,7 +214,7 @@ bool KLL::sortedAtLevel(long nivel){
 
 void KLL::update(KLL kll2){
     
-    //kll2.setSeconds(vector<long>());
+    // kll2.setSeconds(vector<long>());
     // para cada nivel
     for(int nivel=0; nivel<kll2.height();nivel++){
         pair<vector<long>,long> kll2pair = kll2.sketchAtLevel(nivel);
