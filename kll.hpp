@@ -10,6 +10,7 @@ class KLL{
         
         // Operaciones asociadas al problema y funcionalidad general
         void add(long &element); // agregar element al sketch
+        void addv(long element); // agregar element al sketch
         unsigned long rank(long element); // indica el rank del elemento proporcionado
         long select(long rank); // retorna el elemento cuyo rank es el indicado
         long quantile(double q); // retorna elemento encontrado en el quantil q

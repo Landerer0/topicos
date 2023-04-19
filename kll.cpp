@@ -13,6 +13,8 @@ KLL::KLL(unsigned long numElements, double epsilonParam, double numC){
     c = numC;
     epsilon = epsilonParam;
     k = ceil(1.0/epsilon* ceil(log2(epsilon*n))) +1;
+    //k = 200;
+    cout<<" k "<<k<<endl;
     if(k%2==1) k+=1; // k sera par
 
     cerr << "Num Elementos: " << numElements << endl;
@@ -46,7 +48,7 @@ KLL::KLL(unsigned long numElements, double epsilonParam, double numC){
     }
 
     cout << "Cant elementos en Sketch: " << espacioOcupado << " Espacio ocupado: " << espacioOcupado*sizeof(long) << " bytes" <<  endl;
-    print();
+    //print();
 }
 
 KLL::~KLL(){
@@ -134,6 +136,14 @@ void KLL::add(long &element){
     return;
 }
 
+void KLL::addv(long element){
+    numElementosRevisados++; // para metodo quantile
+    insertElement(0,element);
+    compaction((long) 0, false);
+
+    return;
+}
+
 unsigned long KLL::rank(long element){
     unsigned long rank = 0;
 
@@ -141,10 +151,11 @@ unsigned long KLL::rank(long element){
 
     for(int nivel=0;nivel< numArreglos;nivel++){ // por cada arreglo
         actual = sketch.at(nivel).first;
-        if(!sorted.at(nivel)){
+        //if(!sorted.at(nivel)){
             sort(actual.begin(),actual.end());
-            sorted.at(nivel) = true;
-        } 
+	    sketch.at(nivel).first = actual;
+         //   sorted.at(nivel) = true;
+        //} 
         for(int i=0;i<actual.size();i++){ // por cada item dentro del arreglo
             if(actual.at(i) < 0) continue;
             if(element >= actual.at(i)){ // comparo el num elementos menores
@@ -162,7 +173,9 @@ long KLL::select(long rank){
     // llenar el vector con los elementos del sketch 
     for(int i=0;i<numArreglos;i++){
         unsigned long long peso = pow(2,i);
-        for(int j=0;j<sketch.at(i).second;j++){
+        //for(int j=0;j<sketch.at(i).second;j++){
+        for(int j=0;j<sketch.at(i).first.size();j++){
+	    if(sketch.at(i).first.at(j) < 0)continue;
             pair<long, unsigned long long> toInsert;
             toInsert.first = sketch.at(i).first.at(j);
             toInsert.second = peso;
@@ -176,6 +189,7 @@ long KLL::select(long rank){
     long rankActual = 0;
     //retornar segun la suma de elementos
     for(int i=0;i<elementos.size();i++){
+	if(elementos.at(i).first < 0)continue;
         rankActual+=elementos.at(i).second;
         if(rank<=rankActual) return elementos.at(i).first;
     }
@@ -184,6 +198,8 @@ long KLL::select(long rank){
 }
 
 long KLL::quantile(double q){
+    q = q/100.0;
+    cout<<" q "<<q<<" numElementosRevisados "<<numElementosRevisados<<"\n";
     return select(floor(q*numElementosRevisados));
 }
 

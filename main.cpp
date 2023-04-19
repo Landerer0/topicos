@@ -25,7 +25,7 @@ void quantiles(KLL &kll, int numQuantiles){
     if(numQuantiles <= 0 || numQuantiles>100) return;
     for(int i=0;i<numQuantiles;i++){
         int quantil = 100/numQuantiles*i;
-        cout << "quantil " << quantil << ": " << kll.quantile(quantil) << endl;
+        cout << " quantil " << quantil << " : " << kll.quantile(quantil) << endl;
     }
 }
 
@@ -40,6 +40,82 @@ vector<long> crearVectorElements(long numElementosCreate){
     std::shuffle(std::begin(elementos), std::end(elementos), rng);
 
     return elementos;
+}
+
+void normalElements(int mean, int stdev, int len, int scale){
+    std::random_device rd;
+    //std::mt19937 gen(rd());
+    std::mt19937 gen(1);
+
+    vector<long> elementos;
+    std::normal_distribution<> d(mean,stdev);
+    for(int n=0; n<len; ++n) {
+        elementos.push_back((long)scale*d(gen));
+    }
+    KLL kll(len,epsilon,numC);
+    for(int i=0;i<len;i++){
+        kll.add(elementos.at(i));
+        //cout << "termino" << endl;
+    }
+
+    //cout << endl;
+    //cout << "KLL1 Final:" << endl;
+    //kll.print();
+    cout<<" quantil 0.25 "<<kll.quantile(0.25)<<endl;
+    cout<<" quantil 0.5 "<<kll.quantile(0.5)<<endl;
+    cout<<" quantil 0.75 "<<kll.quantile(0.75)<<endl;
+    cout<<" quantil 0.95 "<<kll.quantile(0.95)<<endl;
+    cout<<" rank 100 "<<kll.rank(100)<<endl;
+    cout<<" rank 70 "<<kll.rank(70)<<endl;
+    cout<<" rank 50 "<<kll.rank(50)<<endl;
+    int numQuery = 10;
+    vector<long> query;
+    for(int i=0;i<numQuery;i++){
+        query.push_back(elementos.at(rand()%elementos.size()));
+    }
+    sort(query.begin(),query.end());
+    //sort(elementos.begin(),elementos.end());
+
+    /*
+    cout << endl << "RESULTADOS:" << endl;
+    unsigned long long sumaErrorRank = 0;
+    double duracionTotal = 0; //not sure about the type
+    for(int i=0;i<numQuery;i++){
+        auto t_start = std::chrono::high_resolution_clock::now();
+
+        long queryRank = kll.rank(query.at(i));
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_time_ms = std::chrono::duration<double, std::nano>(t_end-t_start).count();
+        duracionTotal += elapsed_time_ms;
+        long rankCorrecto = long(lower_bound(elementos.begin(), elementos.end(), query.at(i)) - elementos.begin());
+        cout << "rank de " << query.at(i) << ": " << queryRank << " Tomado en un tiempo de " << endl;
+        cout << "rank correcto de " << query.at(i) << ": "
+             << rankCorrecto << endl;
+        cout << "error de rank: " << abs(queryRank-rankCorrecto) << endl;
+        sumaErrorRank+=abs(queryRank-rankCorrecto);
+        cout << "select de " << queryRank << ": " << kll.select(queryRank) << endl;
+        cout << "select correcto de " << rankCorrecto << ": "
+             << elementos.at(rankCorrecto) << endl;
+
+        for(int j=0;j<10;j++){
+            cout << "- ";
+        }
+        cout << endl;
+    }
+    */
+}
+
+void normalDistribution(int mean, int stdev, int len, int scale){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    KLL kll(numElements, epsilon, numC);
+    // if particles decay once per second on average,
+    // how much time, in seconds, until the next one?
+    std::normal_distribution<> d(mean,stdev);
+    for(int n=0; n<len; ++n) {
+        kll.addv((long)scale*d(gen));
+    }
+
 }
 
 void lecturaManual(){
@@ -60,7 +136,7 @@ void lecturaManual(){
     cout << endl;
 
     cout << "KLL1 Final:" << endl;
-    kll.print();
+    //kll.print();
 
     // for(int i=0;i<numElements2;i++){
     //     kll2.add(elementos2.at(i));
@@ -167,6 +243,8 @@ void lecturaDeStream(int numStreams, char* argv[]){
         KLL kll(wc,epsilon,numC);
         lecturaStream(kll,argv[i+1]);
         kll.print();
+	cout<<" rank 5 "<<kll.rank(5)<<"\n";
+        kll.print();
         kllSketches.push_back(kll);
         quantiles(kll,4);
         cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
@@ -188,6 +266,16 @@ int main(int argc, char*argv[]){
     // lectura manual o por stream
     if(argc==1) lecturaManual();
     else if(argc>=2) lecturaDeStream(argc-1, argv);
+	    /*
+    if(argc >= 2){
+	    int mean = atoi(argv[1]);
+	    int stdev = atoi(argv[2]);
+	    int len = atoi(argv[3]);
+	    int scale = atoi(argv[4]);
+	    cout<<" mean "<<mean<<" stdev "<<stdev<<" len "<<len<<" scale "<<scale<<endl;
+	    normalElements(mean, stdev, len,scale);
+    }
+    */
     else{
         cout << "Numero de parametros incorrectos" << endl;
         return 0;
